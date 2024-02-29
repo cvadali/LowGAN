@@ -1,0 +1,9 @@
+[submodule "code/SynthSR"]
+	path = code/SynthSR
+	url = https://github.com/BBillot/SynthSR.git
+[submodule "code/SynthSeg"]
+	path = code/SynthSeg
+	url = https://github.com/BBillot/SynthSeg.git
+[submodule "code/pytorch-CycleGAN-and-pix2pix"]
+	path = code/pytorch-CycleGAN-and-pix2pix
+	url = https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix.git
