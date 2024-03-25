@@ -7,24 +7,19 @@ import ants
 import argparse
 import multiprocessing
 
+def get_subject_list(subs_file):
+    # file containing subjects
+    subject_file = open(subs_file, 'r')
 
-# compute centroid of mask
-def calculate_mask_centroid(image):
-    # Load the image data
-    image_mask = (image>0)
+    # list of all subjects
+    full_subject_list = []
 
-    # Calculate the centroid coordinates
-    indices = np.indices(image_mask.shape)
-    centroid = np.mean(indices[:, image_mask.astype(bool)], axis=1)
+    # convert to list
+    for line in subject_file:
+        line = line.split('\n')[0]
+        full_subject_list.append(line)
 
-    return centroid
-
-# pad with zeros
-def zero_pad(img, pad=50):
-    x,y,z = img.shape
-    img_padded = np.ones((x+pad,y+pad, z+pad))*img[0,0,0]
-    img_padded[pad//2:pad//2 + x, pad//2:pad//2 + y, pad//2:pad//2 + z] = img
-    return img_padded
+    return full_subject_list
 
 # pad into a cube
 def make_cube(img):
@@ -57,40 +52,17 @@ def norm_zero_to_one(vol3D):
     return make_cube(vol3D)
 
 # load subject images
-def load_subject_images(data_source, subject, plane, hifi_or_lofi):
-    # if 3T images
-    if hifi_or_lofi == 'hifi':
-        t1 = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_hifi_T1_skullstripped.nii.gz'))
-        t2 = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_hifi_T2_skullstripped.nii.gz'))
-        flair = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_hifi_FLAIR_skullstripped.nii.gz'))
-
-    # if 64mT images
-    elif hifi_or_lofi == 'lofi':
-        t1 = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_lofi_T1_in_hifi_T1_skullstripped.nii.gz'))
-        t2 = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_lofi_T2_in_hifi_T2_skullstripped.nii.gz'))
-        flair = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_lofi_FLAIR_in_hifi_FLAIR_skullstripped.nii.gz'))
+def load_subject_images(data_source, subject, plane):
+    t1 = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_lofi_T1_in_lofi_T1_skullstripped.nii.gz'))
+    t2 = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_lofi_T2_in_lofi_T2_skullstripped.nii.gz'))
+    flair = ants.image_read(os.path.join(data_source,subject, 'derivatives', 'registered_images', f'{subject}_lofi_FLAIR_in_lofi_FLAIR_skullstripped.nii.gz'))
     
-    else:
-        print('Must input either hifi (for 3T images) or lofi (for 64mT images) for hifi_or_lofi')
-        sys.exit()
 
     subject_dict = []
 
-    if t1.shape[0]==np.min(t1.shape):
-        flip=True
-    else:
-        flip=False
-
-    # multiply by 255 for RGB conversion
-    if flip==False:
-        subject_dict.append(norm_zero_to_one((t1).numpy().swapaxes(0,1)) * 255)
-        subject_dict.append(norm_zero_to_one((t2).numpy().swapaxes(0,1)) * 255)
-        subject_dict.append(norm_zero_to_one((flair).numpy().swapaxes(0,1)) * 255)
-    else:
-        print('flip')
-        subject_dict.append(norm_zero_to_one(np.flip(np.fliplr(np.rot90((t1).numpy().swapaxes(0,2))).swapaxes(0,1), axis=2)) * 255)
-        subject_dict.append(norm_zero_to_one(np.flip(np.fliplr(np.rot90((t2).numpy().swapaxes(0,2))).swapaxes(0,1), axis=2)) * 255)
-        subject_dict.append(norm_zero_to_one(np.flip(np.fliplr(np.rot90((flair).numpy().swapaxes(0,2))).swapaxes(0,1), axis=2)) * 255)
+    subject_dict.append(norm_zero_to_one(np.flip(np.fliplr(np.rot90((t1).numpy().swapaxes(0,2))).swapaxes(0,1), axis=2)) * 255)
+    subject_dict.append(norm_zero_to_one(np.flip(np.fliplr(np.rot90((t2).numpy().swapaxes(0,2))).swapaxes(0,1), axis=2)) * 255)
+    subject_dict.append(norm_zero_to_one(np.flip(np.fliplr(np.rot90((flair).numpy().swapaxes(0,2))).swapaxes(0,1), axis=2)) * 255)
 
 
     subject_dict = np.array(subject_dict)
@@ -115,25 +87,24 @@ def load_subject_images(data_source, subject, plane, hifi_or_lofi):
 def concat_t1_t2_flair(t1,t2,flair):
     return np.concatenate([t1[:,:,np.newaxis],t2[:,:,np.newaxis],flair[:,:,np.newaxis]],axis=2)
 
-# concatenate hifi and lofi images next to each other
-def concat_hifi_lofi(hifi_array, lofi_array):
-    hifi_and_lofi_array = np.concatenate([hifi_array, lofi_array], 1)
+# concatenate the same lofi images next to each other
+def concat_lofi_lofi(lofi_array):
+    lofi_and_lofi_array = np.concatenate([lofi_array, lofi_array], 1)
 
-    return hifi_and_lofi_array
+    return lofi_and_lofi_array
 
 # create dataset for a single sub for a given plane
 def create_dataset_single_sub_single_plane(subID, data_source, outdir, plane):
     print(f'Processing: {subID} {plane}')
 
-    # preprocess and save out paired lofi/hifi datasets of PNG files
+    # preprocess and save out paired lofi/lofi datasets of PNG files
     # select appropriate volume
-    array_hifi = load_subject_images(data_source, subID, plane, 'hifi')
 
-    array_lofi = load_subject_images(data_source, subID, plane, 'lofi')
+    array_lofi = load_subject_images(data_source, subID, plane)
 
-    output_path = os.path.join(outdir, f'dataset_{plane}_pix2pix')
+    output_path = os.path.join(outdir, f'dataset_{plane}_pix2pix', 'test')
 
-    z = array_hifi.shape[2] # process along the z-axis
+    z = max(array_lofi.shape) # maximum dimension
 
 
     for i in range(0,z):
@@ -143,58 +114,48 @@ def create_dataset_single_sub_single_plane(subID, data_source, outdir, plane):
 
         # slice differently depending on plane
         if plane == 'axial':
-            hifi_png_array = concat_t1_t2_flair(array_hifi[0,i,:,:], array_hifi[1,i,:,:], array_hifi[2,i,:,:])
             lofi_png_array = concat_t1_t2_flair(array_lofi[0,i,:,:], array_lofi[1,i,:,:], array_lofi[2,i,:,:])
         elif plane == 'coronal':
-            hifi_png_array = concat_t1_t2_flair(array_hifi[0,:,i,:], array_hifi[1,:,i,:], array_hifi[2,:,i,:])
             lofi_png_array = concat_t1_t2_flair(array_lofi[0,:,i,:], array_lofi[1,:,i,:], array_lofi[2,:,i,:])
         elif plane == 'sagittal':
-            hifi_png_array = concat_t1_t2_flair(array_hifi[0,:,:,i], array_hifi[1,:,:,i], array_hifi[2,:,:,i])
             lofi_png_array = concat_t1_t2_flair(array_lofi[0,:,:,i], array_lofi[1,:,:,i], array_lofi[2,:,:,i])
         else:
             print('Must specify a plane')
             sys.exit()
         
-        # combine hifi and lofi images side by side
-        # hifi on left, lofi on right
-        combined_hifi_lofi_png_array = concat_hifi_lofi(hifi_png_array, lofi_png_array)
+        # combine lofi and lofi images side by side
+        # lofi on left, lofi on right
+        # because pix2pix requires this
+        combined_lofi_lofi_png_array = concat_lofi_lofi(lofi_png_array)
 
         # save combined hifi lofi image
-        cv2.imwrite(filepath, combined_hifi_lofi_png_array)
+        cv2.imwrite(filepath, combined_lofi_lofi_png_array)
 
 # create dataset for a given plane (axial, coronal, or sagittal)
 def create_dataset_single_plane(subs_file, data_source, outdir, plane):
 
-    # file containing subjects
-    subject_file = open(subs_file, 'r')
-
-    # list of all subjects
-    full_subject_list = []
-
-    # convert to list
-    for line in subject_file:
-        line = line.split('\n')[0]
-        full_subject_list.append(line)
+    full_subject_list = get_subject_list(subs_file)
 
     # process all subjects
-    for subID in full_subject_list:
-        create_dataset_single_sub_single_plane(subID, data_source, outdir, plane)
+    for sub in full_subject_list:
+        create_dataset_single_sub_single_plane(sub, data_source, outdir, plane)
 
 # iterate over each plane
 def create_dataset_all_planes(subs_file, data_source, outdir):
+    # Check if the folder where the .png files will be output exists 
+    # if not, create it
+    if os.path.exists(outdir) == False:
+        os.makedirs(outdir)
+    
     planes = ['axial', 'coronal', 'sagittal']
 
     for plane in planes:
-        print(plane)
-
-        if os.path.exists(outdir) == False:
-            os.makedirs(outdir)
-
         output_path = os.path.join(outdir, f'dataset_{plane}_pix2pix')
 
         if os.path.exists(output_path) == False:
             os.makedirs(output_path)
-
+        
+        print(plane)
         create_dataset_single_plane(subs_file, data_source, outdir, plane)
     
     print('Finished')
@@ -240,18 +201,10 @@ if __name__ == '__main__':
     if bool(args.parallel) == True:
         print('Processing in parallel')
         
-        max_processes = 20
+        max_processes = 10
 
         # file containing subjects
-        subject_file = open(args.subs_file, 'r')
-
-        # list of all subjects
-        full_subject_list = []
-
-        # convert to list
-        for line in subject_file:
-            line = line.split('\n')[0]
-            full_subject_list.append(line)
+        full_subject_list = get_subject_list(os.path.abspath(args.subs_file))
         
         list_of_arguments = []
 
@@ -267,8 +220,8 @@ if __name__ == '__main__':
 
                 if os.path.exists(output_path) == False:
                     os.makedirs(output_path)
-                
-                list_of_arguments.append((sub, args.data, args.output_dir, plane))
+                    
+                list_of_arguments.append((sub, os.path.abspath(args.data), os.path.abspath(args.output_dir), plane))
         
         with multiprocessing.Pool(processes=max_processes) as pool:
             pool.starmap(create_dataset_single_sub_single_plane, list_of_arguments)
@@ -277,9 +230,9 @@ if __name__ == '__main__':
 
     else:
         create_dataset_all_planes(
-            subs_file=args.subs_file,
-            data_source=args.data,
-            outdir=args.output_dir
+            subs_file=os.path.abspath(args.subs_file),
+            data_source=os.path.abspath(args.data),
+            outdir=os.path.abspath(args.output_dir)
         )
 
     print('Finished')
