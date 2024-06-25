@@ -18,6 +18,7 @@ The code can run on either GPU or CPU, and provides the option of running certai
 
 Your data should be in the following format:
 
+```
 data
 ├── P001
 │   └── session1_64mT
@@ -31,29 +32,25 @@ data
             ├── P002_T1.nii.gz
             ├── P002_T2.nii.gz
             └── P002_FLAIR.nii.gz
-
+```
 
 You will also need to **create a .txt file with the ID of each subject**. For example, above, there are 2 subjects, P001 and P002, so the subject file, which I will call `list_of_subjects.txt`, will look like this:
-
+```
 P001
-
 P002
-
+```
 
 If there were 20 subjects, the file would look like this:
-
+```
 P001
-
 P002
-
 P003
-
 .
 .
 .
 
 P020
-
+```
 
 Just make sure to **place each subject ID on a new line**
 
