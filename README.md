@@ -77,6 +77,9 @@ Now, you can run the code with just one command:
 - `<ensemble>` creates outputs using 12 LowGAN models instead of just 1 and then averages the final outputs to improve signal-to-noise ratio. This approach takes longer and is more computationally expensive, but it can be useful if the low-field inputs are particularly challenging
 
 
+Congrats! Your final outputs should be in the **`LowGAN_outputs`** directory within `<output_dir>`
+
+
 ## Citation
 
 **Multi-contrast high-field quality image synthesis for portable low-field MRI using generative adversarial networks and paired data in multiple sclerosis**
