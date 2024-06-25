@@ -80,5 +80,7 @@ Now, you can run the code with just one command:
 ## Citation
 
 **Multi-contrast high-field quality image synthesis for portable low-field MRI using generative adversarial networks and paired data in multiple sclerosis**
+
 Lucas A, Arnold TC, Okar SV, Vadali C, Kawatra KD, Ren Z, Cao Q, Shinohara RT, Schindler MK, Davis KA, Litt B, Reich DS, Stein JM.
+
 _Under Review_ (2024)
