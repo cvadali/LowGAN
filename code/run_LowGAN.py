@@ -22,7 +22,7 @@ This script runs the full LowGAN pipeline on data in BIDS format. The pipeline i
 1. Reorient, register, and skullstrip each image
 2. Generate pix2pix datasets
 3. Run inference with LowGAN pix2pix networks
-4. Reconstruct images from pix2pix outputs
+4. Reconstruct volumes from pix2pix outputs
 5. Reshape reconstructed volumes
 6. Coregister reshaped reconstructed volumes
 7. Filter volumes using wavelet transform
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     parser.add_argument('-subs_file','--subs_file', help='File containing list of subjects', type=str, required=True)
     parser.add_argument('-data','--data', help='Directory with subjects in BIDS format (each with T1, T2, and FLAIR images)', type=str, required=True)
     parser.add_argument('-output_dir','--output_dir', help='Directory to output all outputs from LowGAN', type=str, required=True)
-    parser.add_argument('-parallel','--parallel', help='(OPTIONAL) Run in parallel', type=bool, required=False, default=False)
-    parser.add_argument('-ensemble', '--ensemble', help='(OPTIONAL) Use ensemble of 12 models and average', type=bool, required=False, default=False)
+    parser.add_argument('-parallel','--parallel', help='(OPTIONAL) Run in parallel', action='store_true')
+    parser.add_argument('-ensemble', '--ensemble', help='(OPTIONAL) Use ensemble of 12 models and average', action='store_true')
     
     args = parser.parse_args()
 
