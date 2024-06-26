@@ -11,8 +11,9 @@ The code can run on either GPU or CPU, and provides the option of running certai
     `pip install -r requirements.txt`
     `conda create --name LowGAN --file requirements.txt`
 
-3. Download the `checkpoints.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1pwL7TSEp0Ve-9m3o-XWx59tlz9M97uY7/view?usp=drive_link) and then copy the file to [code](https://github.com/cvadali/LowGAN/tree/main/code). Unarchive and unzip the file by running the following command: `tar -xvzf checkpoints.tar.gz`
-4. If you installed the necessary packages using a conda environment, activate the environment using `conda activate LowGAN`
+3. To clone the necessary pix2pix submodule, run `git submodule init` and then `git submodule update`
+4. Download the `checkpoints.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1pwL7TSEp0Ve-9m3o-XWx59tlz9M97uY7/view?usp=drive_link) and then copy the file to [code](https://github.com/cvadali/LowGAN/tree/main/code). Unarchive and unzip the file by running the following command: `tar -xvzf checkpoints.tar.gz`
+5. If you installed the necessary packages using a conda environment, activate the environment using `conda activate LowGAN`
 
 ## Data format
 
