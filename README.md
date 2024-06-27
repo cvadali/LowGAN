@@ -20,7 +20,11 @@ The code can run on either GPU or CPU, and provides the option of running certai
     `pip install -r requirements_gpu.txt`
 
 3. To clone the necessary pix2pix submodule, run `git submodule init` and then `git submodule update`
-4. Download the `checkpoints.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1pwL7TSEp0Ve-9m3o-XWx59tlz9M97uY7/view?usp=drive_link) and then copy the file to the [code](https://github.com/cvadali/LowGAN/tree/main/code) directory. Unarchive and unzip the file by running the following command: `tar -xvzf checkpoints.tar.gz`
+4. Download the `checkpoints.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1pwL7TSEp0Ve-9m3o-XWx59tlz9M97uY7/view?usp=drive_link) and then copy the file to the [code](https://github.com/cvadali/LowGAN/tree/main/code) directory. 
+    
+    Unarchive and unzip the file by running the following command: `tar -xvzf checkpoints.tar.gz`
+
+    After it has been unarchived and unzipped, you can remove the `checkpoints.tar.gz` file using `rm checkpoints.tar.gz`
 
 ## Data format
 
