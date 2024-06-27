@@ -33,7 +33,9 @@ def make_cube(img):
     
     zero_padded = np.ones((int(x+(to_add_x*2)), int(y+(to_add_y*2)), int(z+(to_add_z*2))))*img[0,0,0]
     
-    zero_padded[math.floor(to_add_x):x+math.floor(to_add_x), math.floor(to_add_y):y+math.floor(to_add_y), math.floor(to_add_z):z+math.floor(to_add_z)] = img
+    zero_padded[math.floor(to_add_x):x+math.floor(to_add_x), 
+                math.floor(to_add_y):y+math.floor(to_add_y), 
+                math.floor(to_add_z):z+math.floor(to_add_z)] = img
     
     return zero_padded
 

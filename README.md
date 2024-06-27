@@ -1,19 +1,26 @@
 # LowGAN
 
-This repository contains our implementation of LowGAN — a generative adversarial network (GAN) for low-to-high field (64mT to 3T) MR image translation. This network was trained on paired multiple sclerosis data, but feel free to try it out on any 64mT images you may have! This network takes **64mT T1w, T2w, and FLAIR sequences as input, and returns synthetic 3T T1w, T2w, and FLAIR outputs**. 
+This repository contains our implementation of LowGAN — a generative adversarial network (GAN) for low-to-high field (64mT to 3T) MR image translation. This network was trained on paired multiple sclerosis (MS) data, but feel free to try it out on any 64mT images you may have! This network takes **64mT T1w, T2w, and FLAIR sequences as input, and returns synthetic 3T T1w, T2w, and FLAIR outputs**. 
 
 The code can run on either GPU or CPU, and provides the option of running certain steps of the pipeline in parallel or series, and also whether to use the standard model trained on 50 subjects or to use the "ensemble" model and average the outputs at the end. The ensemble model was created because we performed 12-fold cross-validation on our data, meaning we split the 50 subjects into 12 different folds, where each subject was part of the training set in 11 of the folds and part of the test set in exactly one fold, and then trained and tested a separate version of our network for each of these 12 folds. As a result, we ended up with 12 trained LowGAN networks, and we found that while every model produces an output with a little noise, different models don't necessarily produce the exact same noise for the same input (i.e., the noise is a bit random); therefore, if we use each of the 12 models to create a set of outputs and then average those outputs across the 12 models, we get **outputs with improved signal-to-noise ratios**. The tradeoff is that the ensemble model takes longer to run and is more computationally expensive, as it involves computing the outputs of 12 LowGAN networks instead of just 1, so it may not be the best choice for every use case. The normal model already performs quite well, but for particularly challenging low-field inputs, the ensemble model may be a better approach (albeit a more length and computationally expensive one).
 
 ## Installation
 
 1. Clone this GitHub repository.
-2. Create a virtual environment (conda or pip) to install the necessary packages using the `requirements.txt` file:
-    `pip install -r requirements.txt`
-    `conda create --name LowGAN --file requirements.txt`
+2. Create a virtual conda environment to install the necessary packages using the chosen requirements file by running the following command:
+    `conda create -n LowGAN python=3.11`
+
+    Then, activate the conda environment with the following command:
+    `conda activate LowGAN`
+
+    Then, if you want to run the code on **CPU**, run the following command:
+    `pip install -r requirements_cpu.txt`
+
+    If you instead want to run the code on **GPU**, run the following command:
+    `pip install -r requirements_gpu.txt`
 
 3. To clone the necessary pix2pix submodule, run `git submodule init` and then `git submodule update`
-4. Download the `checkpoints.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1pwL7TSEp0Ve-9m3o-XWx59tlz9M97uY7/view?usp=drive_link) and then copy the file to [code](https://github.com/cvadali/LowGAN/tree/main/code). Unarchive and unzip the file by running the following command: `tar -xvzf checkpoints.tar.gz`
-5. If you installed the necessary packages using a conda environment, activate the environment using `conda activate LowGAN`
+4. Download the `checkpoints.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1pwL7TSEp0Ve-9m3o-XWx59tlz9M97uY7/view?usp=drive_link) and then copy the file to the [code](https://github.com/cvadali/LowGAN/tree/main/code) directory. Unarchive and unzip the file by running the following command: `tar -xvzf checkpoints.tar.gz`
 
 ## Data format
 
@@ -64,7 +71,7 @@ Additionally, **make sure your data is in the BIDS format specified above and th
 
 Now, you can run the code with just one command:
 
-`python run_LowGAN.py --subs_file <subs_file> --data <data> --output_dir <output_dir> [--parallel --ensemble]`
+`python run_LowGAN.py --subs_file <subs_file> --data <data> --output_dir <output_dir> [--parallel --ensemble --intermediates]`
 
 **Necessary arguments**:
 
@@ -76,9 +83,22 @@ Now, you can run the code with just one command:
 
 - `<parallel>` runs the creation of the pix2pix datasets, reconstruction of volumes from pix2pix outputs, reshaping of reconstructed volumes, and filtering of volumes using wavelet transform steps in parallel instead of in series (but it is computationally more expensive)
 - `<ensemble>` creates outputs using 12 LowGAN models instead of just 1 and then averages the final outputs to improve signal-to-noise ratio. This approach takes longer and is more computationally expensive, but it can be useful if the low-field inputs are particularly challenging
+- `<intermediates>` keeps the intermediate files generated by the pipeline and puts them in `<output_dir>/intermediates`. Normally, the intermediate files are removed, as they can take up a decent amount of space, but this can be useful for debugging
 
 
-Congrats! Your final outputs should be in the **`LowGAN_outputs`** directory within `<output_dir>`
+Congrats! Your final outputs should be in `<output_dir>/LowGAN_outputs`
+
+## Example
+
+We have provided an example MS subject in the `sample_data` directory. Here, the `sample_data` directory is in the BIDS format specified above, which is necessary for the pipeline to work. We have also have provided a corresponding file, `sample_list_of_subjects.txt`, which lists the sample subject, in the format described above.
+
+To try out this sample data, you can run the following command:
+
+`python run_LowGAN.py --subs_file ../sample_list_of_subjects.txt --data ../sample_data/ --output_dir ../sample_data_outputs/`
+
+This command will run LowGAN on the example subject and save the outputs in `sample_data_outputs`. The final LowGAN outputs will be in `sample_data_outputs/LowGAN_outputs`
+
+Now that you have seen how it works, feel free to try it out with your data!
 
 
 ## Citation
