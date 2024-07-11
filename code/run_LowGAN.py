@@ -511,7 +511,8 @@ if __name__ == '__main__':
 
         # remove generated files from reorient_register_skullstrip.py
         for sub in full_subject_list:
-            os.system(f'rm {os.path.join(os.path.abspath(args.data), sub, "derivatives", "registered_images", sub + "_brainmask.nii.gz")}')
+            if not skullstripped:
+                os.system(f'rm {os.path.join(os.path.abspath(args.data), sub, "derivatives", "registered_images", sub + "_brainmask.nii.gz")}')
             os.system(f'rm {os.path.join(os.path.abspath(args.data), sub, "derivatives", "registered_images", sub + "_lofi_FLAIR_in_lofi_T1.nii.gz")}')
             os.system(f'rm {os.path.join(os.path.abspath(args.data), sub, "derivatives", "registered_images", sub + "_lofi_FLAIR_in_LPI.nii.gz")}')
             os.system(f'rm {os.path.join(os.path.abspath(args.data), sub, "derivatives", "registered_images", sub + "_lofi_FLAIR_to_lofi_t1_xfm.mat")}')
