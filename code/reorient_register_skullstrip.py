@@ -68,7 +68,7 @@ def resample_image(img):
 
     return resampled_image
 
-def register_and_skullstrip_each_subject(full_subject_list, data_dir):
+def register_and_skullstrip_each_subject(full_subject_list, data_dir, skullstripped):
     
     modalities = ['T1', 'T2', 'FLAIR']
 
@@ -111,32 +111,44 @@ def register_and_skullstrip_each_subject(full_subject_list, data_dir):
                 reg_image_lofi, xfm_lofi = register_images(reoriented_image_lofi,
                                                            ants.image_read(os.path.join(registered_images_dir, f'{sub}_lofi_T1_in_LPI.nii.gz')),
                             os.path.join(registered_images_dir,f'{sub}_lofi_{modality}_in_lofi_T1.nii.gz'))
+
+                if skullstripped:
+                    print('already skullstripped')
+
+                    # save the skullstripped image
+                    ants.image_write(resample_image(reg_image_lofi),os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_in_lofi_{modality}_skullstripped.nii.gz'))
+
+                    # save the transform from lofi to lofi t1
+                    red_xfm_lofi = ants.read_transform(xfm_lofi[0])
+                    ants.write_transform(red_xfm_lofi, os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_to_lofi_t1_xfm.mat'))
+
+                else:
                 
-                print('skullstripping')
+                    print('skullstripping')
 
-                # skullstrip the lofi image
-                brain_extracted_T1 = apn.brain_extraction(ants.image_read(os.path.join(registered_images_dir, 
-                                                                    f'{sub}_lofi_{modality}_in_lofi_T1.nii.gz')),
-                                                                    modality=modality.lower())
-                
-                print('save skullstripping')
+                    # skullstrip the lofi image
+                    brain_extracted_T1 = apn.brain_extraction(ants.image_read(os.path.join(registered_images_dir, 
+                                                                        f'{sub}_lofi_{modality}_in_lofi_T1.nii.gz')),
+                                                                        modality=modality.lower())
+                    
+                    print('save skullstripping')
 
-                ants.image_write(resample_image(reg_image_lofi)*brain_extracted_T1,os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_in_lofi_{modality}_skullstripped.nii.gz'))
+                    ants.image_write(resample_image(reg_image_lofi)*brain_extracted_T1,os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_in_lofi_{modality}_skullstripped.nii.gz'))
 
-                print('coregister skullstripped image')
-                # coregister lofi brains to T1
-                register_images(ants.image_read(os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_in_lofi_{modality}_skullstripped.nii.gz')), 
-                                ants.image_read(os.path.join(registered_images_dir, f'{sub}_lofi_T1_in_lofi_T1_skullstripped.nii.gz')), 
-                                os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_in_lofi_{modality}_skullstripped.nii.gz'))
+                    print('coregister skullstripped image')
+                    # coregister lofi brains to T1
+                    register_images(ants.image_read(os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_in_lofi_{modality}_skullstripped.nii.gz')), 
+                                    ants.image_read(os.path.join(registered_images_dir, f'{sub}_lofi_T1_in_lofi_T1_skullstripped.nii.gz')), 
+                                    os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_in_lofi_{modality}_skullstripped.nii.gz'))
 
-                # save the transform from lofi to lofi t1
-                print('save transform')
-                red_xfm_lofi = ants.read_transform(xfm_lofi[0])
-                ants.write_transform(red_xfm_lofi, os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_to_lofi_t1_xfm.mat'))
-                
-                print('save brain mask')
-                # save the brain mask for the subjects
-                ants.image_write(brain_extracted_T1, os.path.join(registered_images_dir, f'{sub}_brainmask.nii.gz'))
+                    # save the transform from lofi to lofi t1
+                    print('save transform')
+                    red_xfm_lofi = ants.read_transform(xfm_lofi[0])
+                    ants.write_transform(red_xfm_lofi, os.path.join(registered_images_dir, f'{sub}_lofi_{modality}_to_lofi_t1_xfm.mat'))
+                    
+                    print('save brain mask')
+                    # save the brain mask for the subjects
+                    ants.image_write(brain_extracted_T1, os.path.join(registered_images_dir, f'{sub}_brainmask.nii.gz'))
             
         except Exception as e:
             print(e)
@@ -157,6 +169,13 @@ if __name__ == '__main__':
                         help='Directory with source data',
                         required=True,
                         )
+
+    # whether data is already skullstripped
+    parser.add_argument('-skullstripped', '--skullstripped',
+                        help='Whether the data is already skullstripped',
+                        required=False,
+                        default=False,
+                        )
     
     args = parser.parse_args()
 
@@ -167,9 +186,12 @@ if __name__ == '__main__':
 
     full_subject_list = get_subject_list(os.path.abspath(args.subs_file))
 
+    skullstripped = args.skullstripped
+
     register_and_skullstrip_each_subject(
         full_subject_list=full_subject_list,
-        data_dir=args.data
+        data_dir=args.data,
+        skullstripped=skullstripped
     )
 
     print('Finished')

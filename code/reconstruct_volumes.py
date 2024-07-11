@@ -95,12 +95,7 @@ def save_volume_predicted_single_plane(subject, data_dir, output_dir, model_name
     return save_success
 
 # iterate over a list of subjects
-def iterate_for_each_sub(subs_file, data_dir, output_dir, model_name_stem, plane, phase='test', epoch='latest'):
-    # all image outputs in axial plane
-    all_images = os.listdir(os.path.join(data_dir, 'results_LowGAN', f'{model_name_stem}_axial', f'{phase}_{str(epoch)}', 'images'))
-
-    full_subject_list = get_subject_list(subs_file)
-
+def iterate_for_each_sub(full_subject_list, data_dir, output_dir, model_name_stem, plane, phase='test', epoch='latest'):
     # iterate for each subject
     for sub in full_subject_list:
         success = save_volume_predicted_single_plane(sub, data_dir, output_dir, model_name_stem, plane, phase, epoch)
@@ -112,7 +107,7 @@ def iterate_for_each_sub(subs_file, data_dir, output_dir, model_name_stem, plane
             print(f'Failed: {sub}_{plane}')
 
 # iterate over each plane
-def iterate_for_each_plane(subs_file, data_dir, output_dir, model_name_stem, phase='test', epoch='latest'):
+def iterate_for_each_plane(full_subject_list, data_dir, output_dir, model_name_stem, phase='test', epoch='latest'):
     planes = ['axial', 'coronal', 'sagittal']
 
     for plane in planes:
@@ -125,7 +120,7 @@ def iterate_for_each_plane(subs_file, data_dir, output_dir, model_name_stem, pha
         if os.path.exists(output_dir_plane) == False:
             os.makedirs(output_dir_plane)
         
-        iterate_for_each_sub(subs_file, data_dir, output_dir, model_name_stem, plane, phase, epoch)
+        iterate_for_each_sub(full_subject_list, data_dir, output_dir, model_name_stem, plane, phase, epoch)
 
 
 # if script is actually run
@@ -185,6 +180,8 @@ if __name__ == '__main__':
 
     print('Starting')
 
+    full_subject_list = get_subject_list(os.path.abspath(args.subs_file))
+
     # process in parallel, 10 at a time
     if bool(args.parallel) == True:
         max_processes = 10
@@ -194,12 +191,6 @@ if __name__ == '__main__':
         list_of_arguments = []
 
         # create list of argument tuples
-        # all image outputs in axial plane
-        all_images = os.listdir(os.path.join(args.data, 'results_LowGAN', f'{args.model_name_stem}_axial', 
-                                            f'{args.phase}_{str(args.epoch)}', 'images'))
-
-        full_subject_list = get_subject_list(os.path.abspath(args.subs_file))
-
         output_dir = os.path.abspath(args.output_dir)
 
         if os.path.exists(output_dir) == False:
@@ -222,7 +213,7 @@ if __name__ == '__main__':
     # run in series
     else:
         iterate_for_each_plane(
-            subs_file=os.path.abspath(args.subs_file),
+            full_subject_list=full_subject_list,
             data_dir=os.path.abspath(args.data),
             output_dir=os.path.abspath(args.output_dir),
             model_name_stem=args.model_name_stem,

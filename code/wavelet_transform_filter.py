@@ -13,6 +13,20 @@ https://www.researchgate.net/publication/24419658_Stripe_and_ring_artifact_remov
 
 """
 
+def get_subject_list(subs_file):
+    # file containing subjects
+    subject_file = open(subs_file, 'r')
+
+    # list of all subjects
+    full_subject_list = []
+
+    # convert to list
+    for line in subject_file:
+        line = line.split('\n')[0]
+        full_subject_list.append(line)
+
+    return full_subject_list
+
 def xRemoveStripesVertical_axial(ima, decNum, wname, sigma):
     if ima.ndim == 2:
         return process_single_slice(ima, decNum, wname, sigma)
@@ -155,19 +169,18 @@ def filter_single_volume(img_dir, sub, modality, output_dir, decNum, wname, damp
         print(e)
 
 # filter in series
-def filter_in_series(path, output_dir, decNum=8, wname='db25', damp_sigma=8):
+def filter_in_series(subjects, path, output_dir, decNum=8, wname='db25', damp_sigma=8):
     # create output_dir if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     img_dir = os.path.join(path,'recon_niftis_reshaped_coregistered')
-    subjects = list(set([x.split('_')[0] for x in os.listdir(img_dir)]))
     for modality in ['flair','t1','t2']:
         for sub in subjects:
             filter_single_volume(img_dir, sub, modality, output_dir, decNum, wname, damp_sigma)
 
 # filter in parallel
-def filter_in_parallel(path, output_dir, decNum=8, wname='db25', damp_sigma=8):
+def filter_in_parallel(subjects, path, output_dir, decNum=8, wname='db25', damp_sigma=8):
     # create output_dir if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -176,7 +189,6 @@ def filter_in_parallel(path, output_dir, decNum=8, wname='db25', damp_sigma=8):
     list_of_arguments = []
 
     img_dir = os.path.join(path,'recon_niftis_reshaped_coregistered')
-    subjects = list(set([x.split('_')[0] for x in os.listdir(img_dir)]))
     for modality in ['flair','t1','t2']:
         for sub in subjects:
             list_of_arguments.append((img_dir, sub, modality, output_dir, decNum, wname, damp_sigma))
@@ -192,6 +204,7 @@ if __name__ == '__main__':
     parser.add_argument('-decNum', '--decNum', type=int, default=8, help='Decomposition level', required=False)
     parser.add_argument('-wname', '--wname', type=str, default='db25', help='Wavelet name', required=False)
     parser.add_argument('-damp_sigma', '--damp_sigma', type=int, default=8, help='Damping sigma for the stripe removal', required=False)
+    parser.add_argument('-subs_file', '--subs_file', type=str, help='File containing the list of subjects', required=True)
     parser.add_argument('-path', '--path', type=str, help='Path to the directory containing the outputs', required=True)
     parser.add_argument('-output_dir', '--output_dir', type=str, help='Output directory', required=True)
     parser.add_argument('-parallel', '--parallel', type=bool, default=False, help='Run in parallel', required=False)
@@ -201,12 +214,13 @@ if __name__ == '__main__':
     decNum = args.decNum
     wname = args.wname
     damp_sigma = args.damp_sigma
+    full_subject_list = get_subject_list(os.path.abspath(args.subs_file))
     path = os.path.abspath(args.path)
     output_dir = os.path.abspath(args.output_dir)
     parallel = args.parallel
 
     if parallel:
-        filter_in_parallel(path, output_dir, decNum, wname, damp_sigma)
+        filter_in_parallel(full_subject_list, path, output_dir, decNum, wname, damp_sigma)
 
     else:
-        filter_in_series(path, output_dir, decNum, wname, damp_sigma)
+        filter_in_series(full_subject_list, path, output_dir, decNum, wname, damp_sigma)

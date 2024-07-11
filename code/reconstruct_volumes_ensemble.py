@@ -5,6 +5,20 @@ import ants
 import argparse
 import multiprocessing
 
+def get_subject_list(subs_file):
+    # file containing subjects
+    subject_file = open(subs_file, 'r')
+
+    # list of all subjects
+    full_subject_list = []
+
+    # convert to list
+    for line in subject_file:
+        line = line.split('\n')[0]
+        full_subject_list.append(line)
+
+    return full_subject_list
+
 # create numpy array from generated images in one plane
 def get_volume_predicted_single_plane(subject, pix2pix_out_dir, model_name, phase='test', epoch='latest'):
     # all image outputs
@@ -81,19 +95,7 @@ def save_volume_predicted_single_plane(subject, data_dir, output_dir, model_name
     return save_success
 
 # iterate over a list of subjects
-def iterate_for_each_sub(data_dir, output_dir, model_name_stem, plane, phase='test', epoch='latest'):
-    # all image outputs in axial plane
-    all_images = os.listdir(os.path.join(data_dir, 'results_LowGAN', f'{model_name_stem}_axial', f'{phase}_{str(epoch)}', 'images'))
-
-    full_subject_list = []
-
-    for image in all_images:
-        subject = image.split('_')[0]
-        full_subject_list.append(subject)
-    
-    # remove duplicates
-    full_subject_list = list(set(full_subject_list))
-
+def iterate_for_each_sub(full_subject_list, data_dir, output_dir, model_name_stem, plane, phase='test', epoch='latest'):
     # iterate for each subject
     for sub in full_subject_list:
         success = save_volume_predicted_single_plane(sub, data_dir, output_dir, model_name_stem, plane, phase, epoch)
@@ -105,7 +107,7 @@ def iterate_for_each_sub(data_dir, output_dir, model_name_stem, plane, phase='te
             print(f'Failed: {sub}_{plane}')
 
 # iterate over each plane
-def iterate_for_each_plane(fold, data_dir, output_dir, model_name_stem, phase='test', epoch='latest'):
+def iterate_for_each_plane(full_subject_list, fold, data_dir, output_dir, model_name_stem, phase='test', epoch='latest'):
     print(f'Processing: {fold}')
 
     planes = ['axial', 'coronal', 'sagittal']
@@ -126,21 +128,27 @@ def iterate_for_each_plane(fold, data_dir, output_dir, model_name_stem, phase='t
         if os.path.exists(output_dir_plane) == False:
             os.makedirs(output_dir_plane)
         
-        iterate_for_each_sub(data_dir_fold, output_dir_fold, model_name_stem_fold, plane, phase, epoch)
+        iterate_for_each_sub(full_subject_list, data_dir_fold, output_dir_fold, model_name_stem_fold, plane, phase, epoch)
 
 # iterate for each fold
-def iterate_for_each_fold(data_dir, output_dir, model_name_stem, phase='test', epoch='latest', n_splits=12):
+def iterate_for_each_fold(full_subject_list, data_dir, output_dir, model_name_stem, phase='test', epoch='latest', n_splits=12):
     # get list of folds
     folds = [f'fold_{fold}' for fold in range(0, int(n_splits))]
 
     for fold in folds:
-        iterate_for_each_plane(fold, data_dir, output_dir, model_name_stem, phase, epoch)
+        iterate_for_each_plane(full_subject_list, fold, data_dir, output_dir, model_name_stem, phase, epoch)
 
 
 # if script is actually run
 if __name__ == '__main__':
     # parse command line args
     parser = argparse.ArgumentParser(description='Reconstruct nifti volumes from generated images')
+
+    # subs file
+    parser.add_argument('-subs_file','--subs_file',
+                        help='File containing list of subjects',
+                        required=True,
+                        )
 
     # model name stem
     parser.add_argument('-model_name_stem','--model_name_stem',
@@ -195,6 +203,8 @@ if __name__ == '__main__':
 
     print('Starting')
 
+    full_subject_list = get_subject_list(os.path.abspath(args.subs_file))
+
     # process in parallel, each fold separately
     if bool(args.parallel) == True:
         max_processes = int(args.n_splits)
@@ -205,7 +215,7 @@ if __name__ == '__main__':
         folds = [f'fold_{fold}' for fold in range(0, int(args.n_splits))]
 
         for fold in folds:
-            list_of_arguments.append((fold, os.path.abspath(args.data),
+            list_of_arguments.append((full_subject_list, fold, os.path.abspath(args.data),
                                       os.path.abspath(args.output_dir),
                                       args.model_name_stem, args.phase, args.epoch))
         
@@ -216,6 +226,7 @@ if __name__ == '__main__':
     # run in series
     else:
         iterate_for_each_fold(
+            full_subject_list=full_subject_list,
             data_dir=os.path.abspath(args.data),
             output_dir=os.path.abspath(args.output_dir),
             model_name_stem=args.model_name_stem,
