@@ -173,6 +173,7 @@ if __name__ == '__main__':
     # whether data is already skullstripped
     parser.add_argument('-skullstripped', '--skullstripped',
                         help='Whether the data is already skullstripped',
+                        type=bool,
                         required=False,
                         default=False,
                         )

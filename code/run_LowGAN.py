@@ -95,7 +95,11 @@ if __name__ == '__main__':
 
     skullstripped = args.skullstripped
 
-    os.system(f'python {reorient_register_skullstrip_script} --subs_file {os.path.abspath(args.subs_file)} --data {os.path.abspath(args.data)} --skullstripped {skullstripped}')
+    if skullstripped:
+        os.system(f'python {reorient_register_skullstrip_script} --subs_file {os.path.abspath(args.subs_file)} --data {os.path.abspath(args.data)} --skullstripped True')
+
+    else:
+        os.system(f'python {reorient_register_skullstrip_script} --subs_file {os.path.abspath(args.subs_file)} --data {os.path.abspath(args.data)}')
 
     print('Generating pix2pix datasets')
 
