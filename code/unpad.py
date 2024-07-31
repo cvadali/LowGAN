@@ -20,19 +20,33 @@ def get_subject_list(subs_file):
 
     return full_subject_list
 
-# unpad from a cube
+# unpad from cube
 def unpad_cube(padded_img, orig_img):
     # this function un-pads the image to its original size
-    x,y,z = orig_img.shape
-    x_p,y_p,z_p = padded_img.shape
+    x, y, z = orig_img.shape
+    x_p, y_p, z_p = padded_img.shape
     
-    to_remove_x = (x_p - x) / 2
-    to_remove_y = (y_p - y) / 2
-    to_remove_z = (z_p - z) / 2
+    to_remove_x = (x_p - x) // 2
+    to_remove_y = (y_p - y) // 2
+    to_remove_z = (z_p - z) // 2
     
-    unpadded = padded_img[math.floor(to_remove_x):x+math.floor(to_remove_x), 
-                            math.floor(to_remove_y):y+math.floor(to_remove_y), 
-                            math.floor(to_remove_z):z+math.floor(to_remove_z)]
+    if x_p >= x:
+        unpadded_x = padded_img[to_remove_x:x+to_remove_x]
+    else:
+        pad_width_x = ((x - x_p) // 2, (x - x_p) // 2 + (x - x_p) % 2)
+        unpadded_x = np.pad(padded_img, pad_width=((pad_width_x[0], pad_width_x[1]), (0, 0), (0, 0)), mode='constant')
+    
+    if y_p >= y:
+        unpadded_y = unpadded_x[:, to_remove_y:y+to_remove_y]
+    else:
+        pad_width_y = ((y - y_p) // 2, (y - y_p) // 2 + (y - y_p) % 2)
+        unpadded_y = np.pad(unpadded_x, pad_width=((0, 0), (pad_width_y[0], pad_width_y[1]), (0, 0)), mode='constant')
+    
+    if z_p >= z:
+        unpadded = unpadded_y[:, :, to_remove_z:z+to_remove_z]
+    else:
+        pad_width_z = ((z - z_p) // 2, (z - z_p) // 2 + (z - z_p) % 2)
+        unpadded = np.pad(unpadded_y, pad_width=((0, 0), (0, 0), (pad_width_z[0], pad_width_z[1])), mode='constant')
     
     return unpadded
 
