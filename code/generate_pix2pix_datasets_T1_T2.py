@@ -156,6 +156,11 @@ def generate_dataset_all_planes(subs_file, data_source, outdir):
 
         if os.path.exists(output_path) == False:
             os.makedirs(output_path)
+
+        output_path_test = os.path.join(output_path, 'test')
+
+        if os.path.exists(output_path_test) == False:
+            os.makedirs(output_path_test)
         
         print(plane)
         generate_dataset_single_plane(subs_file, data_source, outdir, plane)

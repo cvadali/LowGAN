@@ -320,7 +320,7 @@ if __name__ == '__main__':
             reshape_reconstructed_volumes.iterate_for_each_plane(
                 subject_list=full_subject_list,
                 data_dir=os.path.abspath(args.output_dir),
-                output_dir=os.path.join(os.path.abspath(args.output_dir), 'recon_niftis_reshaped')
+                out_dir=os.path.join(os.path.abspath(args.output_dir), 'recon_niftis_reshaped')
             )
     
     print('Finished reshaping reconstructed volumes')
