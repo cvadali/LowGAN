@@ -20,7 +20,7 @@ The code can run on either GPU or CPU, and provides the option of running certai
     `pip install -r requirements_gpu.txt`
 
 3. To clone the necessary pix2pix submodule, run `git submodule init` and then `git submodule update`
-4. Download the `checkpoints.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1pwL7TSEp0Ve-9m3o-XWx59tlz9M97uY7/view?usp=drive_link) and then copy the file to the [code](https://github.com/cvadali/LowGAN/tree/main/code) directory. 
+4. Download the `checkpoints.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/14mVt9EzaBUEqHAQ3eQJgbndR9GSYTVRY/view?usp=sharing) and then copy the file to the [code](https://github.com/cvadali/LowGAN/tree/main/code) directory. 
     
     Unarchive and unzip the file by running the following command: `tar -xvzf checkpoints.tar.gz`
 
@@ -98,7 +98,7 @@ Congrats! Your final outputs should be in `<output_dir>/LowGAN_outputs`
 
 We understand that some people only have T1 and T2 sequences and not FLAIR, so we also trained a version of LowGAN to use only T1 and T2. Here's how to use it:
 
-Download the `checkpoints_T1_T2.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1pR729kdP9a8CK_PYptmbxWWk7PhQHHhQ/view?usp=sharing) and then copy the file to the [code](https://github.com/cvadali/LowGAN/tree/main/code) directory. 
+Download the `checkpoints_T1_T2.tar.gz` file containing the models from this [Google Drive](https://drive.google.com/file/d/1NumVsv60IgtPOYZ-_RDcHRPBeGREsrr2/view?usp=sharing) and then copy the file to the [code](https://github.com/cvadali/LowGAN/tree/main/code) directory. 
     
 Unarchive and unzip the file by running the following command: `tar -xvzf checkpoints_T1_T2.tar.gz`
 
@@ -141,8 +141,10 @@ Now that you have seen how it works, feel free to try it out with your data!
 
 ## Citation
 
-**Multi-contrast high-field quality image synthesis for portable low-field MRI using generative adversarial networks and paired data in multiple sclerosis**
+**Multisequence 3-T Image Synthesis from 64-mT Low-Field-Strength MRI Using Generative Adversarial Networks in Multiple Sclerosis**
 
 Lucas A, Arnold TC, Okar SV, Vadali C, Kawatra KD, Ren Z, Cao Q, Shinohara RT, Schindler MK, Davis KA, Litt B, Reich DS, Stein JM.
 
-_Under Review_ (2024)
+_Radiology_ (2025)
+
+[Link to paper](https://pubs.rsna.org/doi/10.1148/radiol.233529)
